@@ -1015,6 +1015,41 @@ __openat64_2_wrapper(const char *call,
     return openat_wrapper(call, next, fildes, path, oflag, mode);
 }
 
+int
+linkat_wrapper(const char *call,
+	     int (*next) (int, const char *, int, const char *, int),
+	     int olddirfd, const char *oldpath, int newdirfd, const char *newpath, int flags)
+{
+    int ret;
+    const char * actual_oldpath, *actual_newpath;
+    WRAPPER_DEBUG("ENTERING linkat_wrapper() => %p [%s => %s]\n", next, oldpath, newpath);
+
+    if (flags & (AT_EMPTY_PATH || AT_SYMLINK_FOLLOW))
+        putil_warn("Linking %s to %s: Support for linkat flags not yet added...", oldpath, newpath);
+
+    ret = (*next)(olddirfd, oldpath, newdirfd, newpath, flags);
+    if (ret == 0) {
+        if (olddirfd == (int)AT_FDCWD || putil_is_absolute(oldpath))
+            actual_oldpath = oldpath;
+        else {
+            // TODO: Determine path relative to olddirfd
+            putil_warn("Linking %s to %s: Support for relative fd not yet added...", oldpath, newpath);
+            actual_oldpath = oldpath;
+        }
+        
+        if (newdirfd == (int)AT_FDCWD || putil_is_absolute(newpath))
+            actual_newpath = newpath;
+        else {
+            // TODO: Determine path relative to olddirfd
+            putil_warn("Linking %s to %s: Support for relative fd not yet added...", oldpath, newpath);
+            actual_oldpath = oldpath;
+        }
+        _pa_record(call, actual_newpath, actual_oldpath, -1, OP_LINK);
+    }
+
+    return ret;
+}
+
 #endif	/*AT_FDCWD*/
 
 /// Interposes over the creat() function.
