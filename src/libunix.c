@@ -965,8 +965,13 @@ openat_wrapper(const char *call,
 	    CCS lbuf;
 	    CS atpath;
 
+#if defined(sun)
 	    snprintf(procbuf, sizeof(procbuf), "/proc/%ld/path/%d",
 		(long)getpid(), fildes);
+#else
+	    snprintf(procbuf, sizeof(procbuf), "/proc/%ld/fd/%d",
+		(long)getpid(), fildes);
+#endif
 
 	    if ((lbuf = putil_readlink(procbuf))) {
 		asprintf(&atpath, "%s/%s", lbuf, path);
